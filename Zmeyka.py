@@ -9,13 +9,11 @@ class SnakeGame:
         self.master.title("Змейка")
         self.master.resizable(False, False)
 
-        # Фиксированная скорость (средняя сложность)
-        self.delay = 150
-
-        # Настройки игры
+        # Настройки игры по умолчанию
         self.cell_size = 20
         self.width = 20
         self.height = 20
+        self.delay = 150  # Задержка по умолчанию (средняя сложность)
         self.score = 0
         self.direction = 'Right'
         self.game_over = False
@@ -29,10 +27,22 @@ class SnakeGame:
         )
         self.canvas.pack()
 
-        # Кнопки управления
+        # Создаем элементы интерфейса
+        self.create_widgets()
+
+        # Инициализация игры
+        self.init_game()
+
+        # Привязываем клавиши управления
+        self.master.bind('<Key>', self.change_direction)
+
+    def create_widgets(self):
+        """Создает элементы интерфейса"""
+        # Фрейм для кнопок
         self.button_frame = tk.Frame(self.master)
         self.button_frame.pack(fill=tk.X, padx=5, pady=5)
 
+        # Кнопка старта
         self.start_button = tk.Button(
             self.button_frame,
             text="Старт",
@@ -40,6 +50,7 @@ class SnakeGame:
         )
         self.start_button.pack(side=tk.LEFT, padx=5)
 
+        # Кнопка сброса
         self.reset_button = tk.Button(
             self.button_frame,
             text="Сброс",
@@ -48,9 +59,35 @@ class SnakeGame:
         )
         self.reset_button.pack(side=tk.LEFT, padx=5)
 
-        # Инициализация игры
-        self.init_game()
-        self.master.bind('<Key>', self.change_direction)
+        # Выбор сложности
+        self.difficulty_label = tk.Label(
+            self.button_frame,
+            text="Сложность:"
+        )
+        self.difficulty_label.pack(side=tk.LEFT, padx=5)
+
+        self.difficulty_var = tk.StringVar(value="medium")
+        self.difficulty_menu = tk.OptionMenu(
+            self.button_frame,
+            self.difficulty_var,
+            "easy", "medium", "hard",
+            command=self.set_difficulty
+        )
+        self.difficulty_menu.pack(side=tk.LEFT, padx=5)
+
+    def set_difficulty(self, difficulty):
+        """Устанавливает уровень сложности"""
+        difficulties = {
+            "easy": 200,
+            "medium": 150,
+            "hard": 100
+        }
+        self.delay = difficulties[difficulty]
+
+        # Если игра уже идет, обновляем задержку
+        if hasattr(self, 'after_id'):
+            self.master.after_cancel(self.after_id)
+            self.update_game()
 
     def init_game(self):
         """Инициализирует игру"""
@@ -62,6 +99,7 @@ class SnakeGame:
         """Начинает игру"""
         self.start_button.config(state=tk.DISABLED)
         self.reset_button.config(state=tk.NORMAL)
+        self.difficulty_menu.config(state=tk.DISABLED)
 
         self.game_over = False
         self.score = 0
@@ -77,6 +115,8 @@ class SnakeGame:
 
         self.start_button.config(state=tk.NORMAL)
         self.reset_button.config(state=tk.DISABLED)
+        self.difficulty_menu.config(state=tk.NORMAL)
+
         self.canvas.delete("all")
 
     def draw_game(self):
@@ -95,7 +135,7 @@ class SnakeGame:
                 outline='black'
             )
 
-        # Рисуем голову змеи
+        # Рисуем голову змеи другим цветом
         head_x, head_y = self.snake[0]
         self.canvas.create_rectangle(
             head_x * self.cell_size,
@@ -131,6 +171,7 @@ class SnakeGame:
         """Изменяет направление движения змеи"""
         key = event.keysym
         if key in ['Up', 'Down', 'Left', 'Right']:
+            # Запрещаем движение в противоположном направлении
             if (key == 'Up' and self.direction != 'Down') or \
                     (key == 'Down' and self.direction != 'Up') or \
                     (key == 'Left' and self.direction != 'Right') or \
@@ -170,7 +211,7 @@ class SnakeGame:
             self.score += 1
             self.food = self.create_food()
         else:
-            # Удаляем хвост
+            # Удаляем хвост, если еда не съедена
             self.snake.pop()
 
         # Перерисовываем игру
