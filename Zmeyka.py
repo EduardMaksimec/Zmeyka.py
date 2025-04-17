@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 import random
+import time
 
 
 class SnakeGame:
@@ -8,6 +9,9 @@ class SnakeGame:
         self.master = master
         self.master.title("Змейка")
         self.master.resizable(False, False)
+
+        # Устанавливаем окно по центру экрана
+        self.set_window_center()
 
         # Настройки игры по умолчанию
         self.cell_size = 20
@@ -35,6 +39,19 @@ class SnakeGame:
 
         # Привязываем клавиши управления
         self.master.bind('<Key>', self.change_direction)
+
+    def set_window_center(self):
+        """Устанавливает окно по центру экрана"""
+        screen_width = self.master.winfo_screenwidth()
+        screen_height = self.master.winfo_screenheight()
+
+        window_width = 400
+        window_height = 480
+
+        position_x = (screen_width - window_width) // 2
+        position_y = (screen_height - window_height) // 2
+
+        self.master.geometry(f'{window_width}x{window_height}+{position_x}+{position_y}')
 
     def create_widgets(self):
         """Создает элементы интерфейса"""
@@ -75,6 +92,14 @@ class SnakeGame:
         )
         self.difficulty_menu.pack(side=tk.LEFT, padx=5)
 
+        # Отображение счета (добавлено обновление в реальном времени)
+        self.score_label = tk.Label(
+            self.master,
+            text=f"Счет: {self.score}",
+            font=('Arial', 12)
+        )
+        self.score_label.pack(pady=5)
+
     def set_difficulty(self, difficulty):
         """Устанавливает уровень сложности"""
         difficulties = {
@@ -103,6 +128,7 @@ class SnakeGame:
 
         self.game_over = False
         self.score = 0
+        self.score_label.config(text=f"Счет: {self.score}")  # Обновляем счет при старте
         self.direction = 'Right'
 
         self.init_game()
@@ -209,6 +235,7 @@ class SnakeGame:
         # Проверяем, съела ли змея еду
         if new_head == self.food:
             self.score += 1
+            self.score_label.config(text=f"Счет: {self.score}")  # Обновляем счет в реальном времени
             self.food = self.create_food()
         else:
             # Удаляем хвост, если еда не съедена
@@ -227,12 +254,13 @@ class SnakeGame:
         self.canvas.create_text(
             self.width * self.cell_size / 2,
             self.height * self.cell_size / 2,
-            text="Игра окончена!",
+            text="Спасибо за игру!",
             fill="white",
             font=('Arial', 20)
         )
 
 
+# Запуск игры
 if __name__ == "__main__":
     root = tk.Tk()
     game = SnakeGame(root)
